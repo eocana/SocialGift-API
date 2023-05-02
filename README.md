@@ -31,6 +31,8 @@ SocialGift es una plataforma que permite interactuar con listas de regalos y mie
 
 # Funcionalidades definidas por el cliente
 
+## Declaración y repartición de tareas
+
 ## Gestion usuarios
 
 - registrar Usuario
