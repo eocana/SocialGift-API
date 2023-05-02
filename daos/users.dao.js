@@ -22,7 +22,15 @@ function item(id) {
   return deletePassword(rows);
 }
 
+function login(email, password) {
+  const stm = db.prepare("SELECT * FROM users WHERE email = ? AND password = ?");
+  const rows = stm.get(email, password);
+  return rows;
+}
+  
+
 module.exports = {
   all,
   item,
+  login
 };
