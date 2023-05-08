@@ -27,3 +27,12 @@ const pool = mysql.createPool({
       res.status(500).json({ error: 'Error storing gift' });
     }
   });
+
+  async function createGift (req, res, next) {
+    try {
+      const data = req.body;
+      const 
+    } catch (error) {
+      return next ({status: 400, error: "El body no es correcto" , trace: error});
+    }
+  }
