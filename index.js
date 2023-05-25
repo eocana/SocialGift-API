@@ -18,7 +18,6 @@ app.use(express.json());
 const usersRouter = require("./routers/users.router.js");
 
 app.use("/users", usersRouter);
-
 // app.use("*", (req, res) => {
 //     res.status(404).json({ error: "not found" });
 // });

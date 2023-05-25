@@ -2,7 +2,6 @@ const db = require("../daos/users.dao.js");
 const jwt = require('jsonwebtoken');
 
 
-
 function generateAccessToken(userId) {
   return jwt.sign({ userId }, 'clave_secreta');
 }
@@ -102,6 +101,77 @@ async function searchUsers(req, res) {
   }
 }
 
+async function getLoggedInUserFriends(req, res) {
+
+  try {
+    const userId = req.user.userId;
+    const friends = await db.getUserFriends(userId);
+    res.json(friends);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+
+}
+
+async function getUserFriends(req, res) {
+  try {
+    const userId = req.params.id;
+    const friends = await db.getUserFriends(userId);
+    res.json(friends);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+async function getUserFriendRequests(req, res) {
+  try {
+    const userId = req.params.id;
+    if (userId === "@me") {
+      userId = req.user.userId;
+      const friendRequests = await db.getLoggedFriends(userId);
+    } else { 
+      const friendRequests = await db.getUserFriendRequests(userId);
+      
+    }
+    res.json(friendRequests);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+async function sendFriendRequest(req, res) { 
+  try {
+    const userId = req.user.userId;
+    const friendId = req.params.id;
+    const friendRequest = await db.sendFriendRequest(userId, friendId);
+    res.json(friendRequest);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+}
+
+async function actionFriendRequest(req, res) {
+  try {
+    const petitionId = req.params.id;
+
+    const action = req.query.a.trim();
+
+    const friendRequest = null;
+
+    switch (action) {
+      case "accept": friendRequest = await db.acceptFriendRequest(petitionId);
+        break;
+      case "reject": friendRequest = await db.rejectFriendRequest(petitionId);
+        break;
+    }
+    res.json(friendRequest);
+
+  } catch (err) {
+    console.log("Estoy en actionFriendRequest catch: ");
+    res.status(500).json({ message: err.message });
+  }
+}
+
 
 module.exports = {
   all,
@@ -111,5 +181,10 @@ module.exports = {
   getLoggedInUser,
   editUser,
   searchUsers,
+  getLoggedInUserFriends,
+  getUserFriends,
+  getUserFriendRequests,
+  sendFriendRequest,
+  actionFriendRequest
     
 };
