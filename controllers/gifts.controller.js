@@ -10,29 +10,51 @@ const pool = mysql.createPool({
     queueLimit: 0
   });
 
-  //Retocar el codi
-  
-  app.post('/gifts', async (req, res) => {
-    try {
-      const { name, recipient, user_id } = req.body;
-      const connection = await pool.getConnection();
-      const [results] = await connection.execute(
-        'INSERT INTO gifts (name, recipient, user_id) VALUES (?, ?, ?)',
-        [name, recipient, user_id]
-      );
-      connection.release();
-      res.json({ id: results.insertId });
-    } catch (error) {
-      console.error('Error storing gift:', error);
-      res.status(500).json({ error: 'Error storing gift' });
-    }
-  });
+async function addGift(req, res) {
+  try {
+    const wishlistId = req.params.wishlistId;
+    const { url, priority } = req.body;
 
-  async function createGift (req, res, next) {
-    try {
-      const data = req.body;
-      const 
-    } catch (error) {
-      return next ({status: 400, error: "El body no es correcto" , trace: error});
-    }
+    //TODO lo del stmt s'ha de posar en el gifts.dao.js
+    // Use the extracted data in the database query
+    const stmt = db.prepare(`
+      INSERT INTO gifts (wishlist_id, url, priority)
+      VALUES (?, ?, ?)
+    `);
+
+    await stmt.run(wishlistId, url, priority);
+
+    res.sendStatus(200);
+  } catch (error) {
+    // Handle any errors that occurred during the asynchronous operations
+    console.error(error);
+    res.sendStatus(500);
+  }
+}
+
+async function updateGift(req, res) {
+  try {
+    const giftId = req.params.giftId;
+    const { url, priority } = req.body;
+
+    //TODO lo del stmt s'ha de posar en el gifts.dao.js
+    // Use the extracted data in the database query
+    const stmt = db.prepare(`
+      UPDATE gifts
+      SET url = ?, priority = ?
+      WHERE id = ?
+    `);
+
+    await stmt.run(url, priority, giftId);
+
+    res.sendStatus(200);
+  } catch (error) {
+    // Handle any errors that occurred during the asynchronous operations
+    console.error(error);
+    res.sendStatus(500);
+  }
+}
+
+  module.exports = {
+    addGift,
   }

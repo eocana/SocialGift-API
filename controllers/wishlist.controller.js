@@ -10,6 +10,35 @@ function getDate() {
     return today;
 }
 
+//Funció feta per chatgpt
+async function createWishlist(wishlistData) {
+    try {
+      const response = await fetch('https://your-api-endpoint/wishlists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(wishlistData),
+      });
+  
+      const wishlist = await response.json();
+      console.log('Wishlist created:', wishlist);
+      return wishlist;
+    } catch (error) {
+      console.error('Error creating wishlist:', error);
+    }
+}
+
+const newWishlist = {
+    id_user: 1,
+    name: 'My Birthday Wishlist',
+    description: 'Gift ideas for my birthday',
+    creation_at: new Date().toISOString(),
+    finished_at: null, // You can set a specific date here if applicable
+  };
+  
+createWishlist(newWishlist);
+
 async function createWishlist(req, res, next) {
     try {
         const data = req.body;
