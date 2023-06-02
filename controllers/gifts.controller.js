@@ -1,4 +1,4 @@
-const db = require('../daos/users.dao.js');
+const db = require('../daos/gifts.dao.js');
 
 const pool = mysql.createPool({
     host: 'localhost',
@@ -15,13 +15,13 @@ async function addGift(req, res) {
     const wishlistId = req.params.wishlistId;
     const { url, priority } = req.body;
 
+      // Use the extracted data in the database query
     //TODO lo del stmt s'ha de posar en el gifts.dao.js
-    // Use the extracted data in the database query
-    const stmt = db.prepare(`
-      INSERT INTO gifts (wishlist_id, url, priority)
-      VALUES (?, ?, ?)
-    `);
+    //Aqui cridar la funcio db.addGift i que retorni 
 
+    const new_gift = await db.addGift(wishlistId, url, priority);
+
+    //TODO revisar si encara haig de posar el stmt.run 
     await stmt.run(wishlistId, url, priority);
 
     res.sendStatus(200);
@@ -38,12 +38,8 @@ async function updateGift(req, res) {
     const { url, priority } = req.body;
 
     //TODO lo del stmt s'ha de posar en el gifts.dao.js
-    // Use the extracted data in the database query
-    const stmt = db.prepare(`
-      UPDATE gifts
-      SET url = ?, priority = ?
-      WHERE id = ?
-    `);
+
+    const gift = await db.updateGift(giftId, url, priority);
 
     await stmt.run(url, priority, giftId);
 
@@ -55,6 +51,21 @@ async function updateGift(req, res) {
   }
 }
 
+async function deleteGift(req, res) {
+  try {
+    const giftId = req.params.giftId;
+    const { url, priority } = req.body;
+
+    
+  } catch (error) {
+    console.error(error);
+    res.sendStatus(500);
+  }
+
+}
+
   module.exports = {
     addGift,
+    updateGift,
+    deleteGift,
   }
