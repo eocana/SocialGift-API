@@ -28,6 +28,10 @@ function updateGift (wishlist_id, url, priority) {
     SET url = ?, priority = ?
     WHERE id = ?
     `);
+
+    const gift_updated = stmt.run (wishlist_id, url, priority);
+
+    return gift_updated;
 }
 
 function deleteGift (gift_id) {
@@ -35,6 +39,8 @@ function deleteGift (gift_id) {
     DELETE gifts
     WHERE id = ?
     `);
+
+    const gift_deleted = stmt.run (gift_id);
 }
 
 module.exports = {

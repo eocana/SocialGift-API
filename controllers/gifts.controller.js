@@ -56,6 +56,7 @@ async function deleteGift(req, res) {
     const giftId = req.params.giftId;
     const { url, priority } = req.body;
 
+    db.deleteGift (giftId, url, priority);
     
   } catch (error) {
     console.error(error);
