@@ -62,7 +62,9 @@ function deleteGift (gift_id, wishlist_id) {
  * @returns 
  */
 function searchGift (wishlist_id) {
-    const stm = db.prepare('SELECT * FROM gifts WHERE id = ?');
+    const stm = db.prepare('SELECT * FROM gifts WHERE id_wishlist = ?');
+    stm.run (wishlist_id);
+
     const gifts = stm.all();
 
     return gifts;
@@ -76,12 +78,39 @@ function searchGift (wishlist_id) {
 function reserveGift(userId, giftId, wishlist_id) {
     const stm = db.prepare(`
         UPDATE gifts
-        SET id_user_booked = ? 
-        WHERE wishlist_id = ?
+        SET user_id_booked = ? 
+        WHERE id_wishlist = ?
         AND id = ?`
     );
 
     stm.run (userId, wishlist_id, giftId);
+}
+
+//TODO falta per mirar com tornar la llista de regals al controlador; per demà
+function searchUserGifts (userId, wishlist_id) {
+    const stm = db.prepare (`
+    SELECT * FROM gifts
+    WHERE id_wishlist = ?`
+    );
+
+    stm.run (wishlist_id);
+
+    const gifts = stm.all ();
+
+    return gifts;
+}
+
+function searchUserReservedGifts (wishlistId, user_id, booked_id) {
+    const stm = db.prepare (`
+    SELECT * FROM ? 
+    WHERE id = ?
+    AND id_wishlist = ?
+    AND user_id_booked = ?
+    `);
+
+    const gifts_booked = stm.all();
+
+    return gifts_booked;
 }
 
 module.exports = {
@@ -90,4 +119,6 @@ module.exports = {
     deleteGift,
     searchGift,
     reserveGift,
+    searchUserGifts,
+    searchUserReservedGifts,
 };

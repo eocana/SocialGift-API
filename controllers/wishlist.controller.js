@@ -1,4 +1,4 @@
-const router = require('../daos/users.dao.js');
+const db = require('../daos/wishlist.dao.js');
 
 function getDate() {
     var today = new Date();
@@ -56,22 +56,43 @@ async function createWishlist(req, res, next) {
         const [rows] = await router.promise().query(query, [obj]);
         console.log(rows.insertId);
         let query2 = `SELECT * FROM wishlist WHERE id = ?`;
-        const [rows2] = await router.promise().query(query2, [rows.insertId]);
+        const [rows2] = await db.promise().query(query2, [rows.insertId]);
         res.status(201).json(rows2);
     } catch (error) {
         next(error);
     }
 }
 
-async function addGiftToWishlist(wishlistId, url, priority) {
+async function updateWishlist (req, res) {
     try {
-        let query = `INSERT INTO gifts (wishlist_id, url, priority) VALUES (?, ?, ?)`;
-        const [rows] = await router.promise().query(query, [wishlistId, url, priority]);
-        console.log(`Gift added to wishlist with ID ${wishlistId}`);
-        return rows.insertId;
+        const wishlist_id = req.query.wishlist_id;
+        const name = req.query.name;
+        const description = req.query.description;
+        const new_date = getDate();
+
+        db.updateWishlist(wishlist_id, name, description, new_date);
+        res.sendStatus (201);
+    }
+}
+
+async function showAllWishlists () {
+    try {
+        const wishlists = await db.showAllWishlists();
+
+        res.json (wishlists);
     } catch (error) {
-        console.error(`Failed to add gift to wishlist with ID ${wishlistId}: ${error}`);
-        throw error;
+        res.status(500);
+    };
+}
+
+async function showWishlist (req, res) {
+    try {
+        const wishlist_id = req.query.body.wishlist_id;
+        const wishlist = await db.showWishlist (wishlist_id);
+
+        res.json (wishlist);;
+    } catch (error) {
+        res.status (500);
     }
 }
 

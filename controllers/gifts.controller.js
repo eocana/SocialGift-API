@@ -64,10 +64,38 @@ async function deleteGift(req, res) {
   }
 }
 
+async function searchUserGifts (req, res) {
+  try {
+    const wishlist_id = req.params.wishlistId;
+    const userId = req.params.userId;
+
+    const gifts = await db.searchUserGifts(userId, wishlist_id);
+    res.json (gifts);
+  } catch (error) {
+    res.status (500).json (error.message);
+  };
+}
+
+async function searchUserReservedGifts (req, res) {
+  try {
+    const wishlist_id = req.params.wishlistId;
+    const user_id = req.params.userId;
+    const gift_booked = user_id;
+
+    const booked_gifts = await db.searchUserReservedGifts (wishlist_id, user_id, gift_booked);
+
+    res.json (booked_gifts)
+
+  } catch (error) {
+    res.status (500).json (error.message);
+  };
+}
+
 async function searchGift(req, res) {
   try {
     const giftId = req.query.giftId;
     const gifts = await db.searchGift(giftId);
+    
     res.json(gifts);
   } catch (error) {
     res.status(500).json(error.message);
