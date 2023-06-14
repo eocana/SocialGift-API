@@ -20,4 +20,6 @@ router.get("/", authMiddleware, all);
 router.get("/all", authMiddleware, all);
 
 
+
+
 module.exports = router;

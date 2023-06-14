@@ -56,7 +56,7 @@ async function create(req, res) {
     } catch (err) {
         res.status(500).json({ message: err.message });
     }
-}
+} 
 
 async function getLoggedInUser(req, res) {
  
@@ -94,7 +94,7 @@ async function editUser(req, res) {
 
 async function searchUsers(req, res) {
   try {
-    const email = req.query.s;
+    const email = req.query.s; ///search?s=loquesea
     const users = await db.searchUsersByEmail(email);
     res.json(users);
   } catch (err) {

@@ -10,13 +10,13 @@ const db = betterSqlite3(DBSOURCE);
  * @param {*} priority 
  * @returns 
  */
-function addGift (wishlistId, url, priority) {
+function addGift (wishlistId, id_product, url, priority) {
     const stm = db.prepare(`
-    INSERT INTO gifts (wishlist_id, url, priority)
-    VALUES (?, ?, ?)
+    INSERT INTO gifts (id_wishlist, id_product, url_product, priority)
+    VALUES (?, ?, ?, ?)
   `);
 
-  const new_gift = stm.run (wishlistId, url, priority);
+  const new_gift = stm.run (wishlistId, id_product, url, priority);
 
   return new_gift;
 }
@@ -31,9 +31,9 @@ function addGift (wishlistId, url, priority) {
 function updateGift (gift_id, url, priority, wishlist_id) {
     const stm = db.prepare(`
     UPDATE gifts
-    SET url = ?, priority = ?
+    SET url_product = ?, priority = ?
     WHERE id = ?
-    AND wishlist_id = ?
+    AND id_wishlist = ?
     `);
 
     //No estic del tot segur de si haig de retornar el regal o no
@@ -46,14 +46,13 @@ function updateGift (gift_id, url, priority, wishlist_id) {
  * Aquesta funció esborra de la base de dades un regal en determinat
  * @param {*} gift_id 
  */
-function deleteGift (gift_id, wishlist_id) {
+function deleteGift (gift_id) {
     const stm = db.prepare(`
-    DELETE gifts
+    DELETE FROM gifts
     WHERE id = ?
-    AND wishlist_id = ?
     `);
 
-    stm.run (gift_id, wishlist_id);
+    stm.run (gift_id);
 }
 
 /**
@@ -61,7 +60,7 @@ function deleteGift (gift_id, wishlist_id) {
  * @param {*} wishlist_id 
  * @returns 
  */
-function searchGift (wishlist_id) {
+function searchGiftsWishlist (wishlist_id) {
     const stm = db.prepare('SELECT * FROM gifts WHERE id_wishlist = ?');
     stm.run (wishlist_id);
 
@@ -70,47 +69,78 @@ function searchGift (wishlist_id) {
     return gifts;
 }
 
+function searchGift (id) {
+ //   console.log ("DAO -> id: " + id);
+    const stm = db.prepare(`
+    SELECT * FROM gifts
+    WHERE id = ?
+    `);
+
+    const gift = stm.get (id);
+ //   console.log ("DAO -> gift.user_id_booked: " + gift.user_id_book);
+    return gift;
+}
+
 /**
  * Aquesta funció s'encarrega de reservar un regal en particular
  * @param {*} userId 
  * @param {*} giftId 
  */
-function reserveGift(userId, giftId, wishlist_id) {
+function reserveGift(userId, giftId) {//, wishlist_id) {
     const stm = db.prepare(`
         UPDATE gifts
         SET user_id_booked = ? 
-        WHERE id_wishlist = ?
-        AND id = ?`
+        WHERE id = ?`
     );
 
-    stm.run (userId, wishlist_id, giftId);
+    stm.run (userId, giftId);
 }
 
-//TODO falta per mirar com tornar la llista de regals al controlador; per demà
-function searchUserGifts (userId, wishlist_id) {
+function deleteReservationGift (id) {
+    const stm = db.prepare (`
+    UPDATE gifts
+    SET user_id_booked = NULL
+    WHERE id = ?
+    `);
+
+    stm.run (id);
+}
+
+function searchUserGift (wishlist_id) {
+//    console.log ("id_wishlist DAO: " + wishlist_id);
     const stm = db.prepare (`
     SELECT * FROM gifts
     WHERE id_wishlist = ?`
     );
 
-    stm.run (wishlist_id);
+    //stm.run (wishlist_id);
 
-    const gifts = stm.all ();
+    const gifts = stm.all (wishlist_id);
 
     return gifts;
 }
 
-function searchUserReservedGifts (wishlistId, user_id, booked_id) {
+function searchUserReservedGifts (user_id_booked) {
+//    console.log ("user_id_booked", user_id_booked);
     const stm = db.prepare (`
-    SELECT * FROM ? 
-    WHERE id = ?
-    AND id_wishlist = ?
-    AND user_id_booked = ?
+    SELECT * FROM gifts 
+    WHERE user_id_booked = ?
     `);
 
-    const gifts_booked = stm.all();
+    const gifts_booked = stm.all(user_id_booked);
 
     return gifts_booked;
+}
+
+function searchAllGifts () {
+    console.log ("Searching")
+    const stm = db.prepare (`
+    SELECT * FROM gifts
+    `);
+
+    const gifts = stm.run ();
+
+    return gifts;
 }
 
 module.exports = {
@@ -118,7 +148,9 @@ module.exports = {
     updateGift,
     deleteGift,
     searchGift,
+    searchAllGifts,
     reserveGift,
-    searchUserGifts,
+    searchUserGift,
     searchUserReservedGifts,
+    deleteReservationGift
 };

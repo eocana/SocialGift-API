@@ -1,28 +1,17 @@
 const db = require('../daos/gifts.dao.js');
 
-const pool = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'password',
-    database: 'mydatabase',
-    waitForConnections: true,
-    connectionLimit: 10,
-    queueLimit: 0
-  });
-
-
   //Intel isense m'ha dit d'esborrar els await innecessaris
 
 async function addGift(req, res) {
   try {
-    const wishlistId = req.params.wishlistId;
-    const { url, priority } = req.body;
+    const wishlistId = req.body.id_wishlist;
+    const id_product = req.body.id_product;
+    const url = req.body.url_product;
+    const priority = req.body.priority;
 
     // Use the extracted data in the database query
 
-    const new_gift = db.addGift(wishlistId, url, priority);
-
-    await stmt.run(wishlistId, url, priority);
+    const new_gift = db.addGift(wishlistId, id_product, url, priority);
 
     res.sendStatus(200);
   } catch (error) {
@@ -34,13 +23,12 @@ async function addGift(req, res) {
 
 async function updateGift(req, res) {
   try {
-    const giftId = req.params.giftId;
-    const wishlist_id = req.query.wishlistId;
-    const { url, priority } = req.body;
+    const giftId = req.params.idg;
+    const wishlist_id = req.params.idw;
+    const url = req.body.url_product;
+    const priority = req.body.priority;
 
     const gift = db.updateGift(giftId, url, priority, wishlist_id);
-
-    await stmt.run(url, priority, giftId);
 
     res.sendStatus(200);
   } catch (error) {
@@ -52,12 +40,11 @@ async function updateGift(req, res) {
 
 async function deleteGift(req, res) {
   try {
-    const giftId = req.params.giftId;
-    const wishlist_id = req.query.wishlistId;
-    const { url, priority } = req.body;
+    const gift_id = req.params.idg;
+    const wishlist_id = req.params.idw;
 
-    db.deleteGift(giftId, wishlist_id);
-    
+    db.deleteGift(gift_id);
+    res.sendStatus (200);
   } catch (error) {
     console.error(error);
     res.sendStatus(500);
@@ -66,10 +53,10 @@ async function deleteGift(req, res) {
 
 async function searchUserGifts (req, res) {
   try {
-    const wishlist_id = req.params.wishlistId;
-    const userId = req.params.userId;
-
-    const gifts = await db.searchUserGifts(userId, wishlist_id);
+    const wishlist_id = req.params.idw;
+  //  const userId = req.body.userId;
+    console.log (wishlist_id)
+    const gifts = await db.searchUserGifts(wishlist_id);
     res.json (gifts);
   } catch (error) {
     res.status (500).json (error.message);
@@ -93,7 +80,7 @@ async function searchUserReservedGifts (req, res) {
 
 async function searchGift(req, res) {
   try {
-    const giftId = req.query.giftId;
+    const giftId = req.params.idg;
     const gifts = await db.searchGift(giftId);
     
     res.json(gifts);
@@ -102,23 +89,81 @@ async function searchGift(req, res) {
   }
 }
 
+
+/**
+ * Aquesta funció posa el id de l'usuari que reserva el regal
+ */
 async function reserveGift(req, res) {
   try {
-    const giftId = req.query.giftId;
-    const wishlist_id = req.query.wishlistId;
-    const userId = req.query.userId;
+    const giftId = req.params.idg;
+    const userId = req.user.userId;
 
-    db.reserveGift(userId, giftId, wishlist_id);
+    db.reserveGift(userId, giftId);
   } catch (error) {
     res.status(500).json(error.message);
   }
 }
 
 
+/**
+ * Aquesta funció elimina la id de l'usuari que ha reservat un regal i posa el camp user_id_book a NULL
+ */
+async function deleteReservationGift (req, res) {
+  try {
+    const id_gift = req.params.idg;
+    const myuser_id = req.user.userId;
+
+  //  console.log ("Console log -> " + id_gift + ", " + myuser_id);
+
+    const gift = await db.searchGift (id_gift);
+
+  //  console.log ("Console log gift -> gift.user_id_booked: " + gift.user_id_booked + " myuser_id: " + myuser_id);
+    if (gift.user_id_booked === myuser_id) {
+      const booking_deletion = db.deleteReservationGift (id_gift);//, user_id_booked);
+      res.json (booking_deletion);
+    }
+  } catch (error) {
+    res.status (500).json(error.message);
+  }
+}
+
+async function searchUserGift (req, res) {
+  try {
+    const user_id = req.user.userId;
+    const wishlist_id = req.params.idw;
+    let user_gifts = null;
+  //  console.log ("id_wishlist: " + wishlist_id);
+    if (req.query.reserved) {
+  //    console.log ("TRUE");
+      user_gifts = db.searchUserReservedGifts (user_id);
+    } else {
+      user_gifts = db.searchUserGift (wishlist_id);//, user_id);
+    }
+    res.json (user_gifts);
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+}
+
+async function searchAllGifts () {
+  try {
+    console.log ("HOLA?!");
+    const all_gifts = await db.searchAllGifts ();
+    console.log ("all_gifts", all_gifts);
+  
+    res.json (all_gifts);
+  } catch (error) {
+    res.status(500).json(error.message);
+  }
+}
+
 module.exports = {
   addGift,
   updateGift,
   deleteGift,
   searchGift,
+  searchAllGifts,
   reserveGift,
+  searchUserGift,
+  deleteReservationGift
 };

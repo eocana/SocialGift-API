@@ -3,21 +3,22 @@ const DBSOURCE = './database.sqlite';
 const betterSqlite3 = require ('better-sqlite3');
 const db = betterSqlite3 (DBSOURCE);
 
-function createWishlists (id_user, name, description, description, created_at, finished_at) {
+function createWishlist (id_user, name, description, created_at, finished_at) {
     const stm = db.prepare (`
-    INSERT INTO wishlist (id, id_user, name, description, creation_at, finished_at)
-    VALUES (?, ?, ?, ?, ?, ?)`);
+    INSERT INTO wishlist (id_user, name, description, creation_at, finished_at)
+    VALUES (?, ?, ?, ?, ?)`);
 
-    const new_wishlist = db.run (id, id_user, name, description, created_at, finished_at);
+    //console.log ("Console.log CreateWishlist (DAO) ->" + name + ", " + description + ", " + created_at + "->" + finished_at);
 
-    return new_wishlist;
+
+    stm.run (id_user, name, description, created_at, finished_at);
 }
 
-function update_wishlist (wishlist_id, name, description, new_date) {
+function updateWishlist (wishlist_id, name, description, new_date) {
     const stm = db.prepare (`
     UPDATE wishlist 
-    SET name = ?, description = ?, new_date = ?
-    WHERE wishlist_id = ?
+    SET name = ?, description = ?, finished_at = ?
+    WHERE id = ?
     `);
 
     stm.run (name, description, new_date, wishlist_id);
@@ -28,18 +29,50 @@ function showAllWishlists () {
     SELECT * FROM wishlist
     `);
 
-    const wishlists = stm.run ();
+    const wishlists = stm.all ();
 
     return wishlists;
 }
 
-function showWishlist (wishlist_id) {
+function showUserWishlists (user_id) {
     const stm = db.prepare (`
     SELECT * FROM wishlist
-    WHERE wishlist_id = ?
+    WHERE id_user = ?
     `);
 
-    const wishlist = stm.run (wishlist_id);
+    //console.log ("(DAO) user_id: " + user_id);
+    const wishlists = stm.all (user_id);
+    
+
+    return wishlists;
+}
+
+function showWishlist (wishlist_id, user_id) {
+    const stm = db.prepare (`
+    SELECT * FROM wishlist
+    WHERE id = ?
+    AND id_user = ?
+    `);
+
+    const wishlist = stm.get (wishlist_id, user_id);
 
     return wishlist;
+}
+
+function deleteWishlist (wishlist_id) {
+    const stm = db.prepare (`
+    DELETE FROM wishlist
+    WHERE id = ?
+    `);
+
+    stm.run (wishlist_id);
+}
+
+module.exports = {
+    deleteWishlist,
+    showAllWishlists,
+    showUserWishlists,
+    showWishlist,
+    createWishlist,
+    updateWishlist
 }
