@@ -22,9 +22,6 @@ const giftRouter = require("./routers/gifts.router.js");
 app.use("/users", usersRouter);
 app.use("/wishlists", wishlistRouter);
 app.use ("/gifts", giftRouter);
-// app.use("*", (req, res) => {
-//     res.status(404).json({ error: "not found" });
-// });
 
 app.listen(port, () => {
   console.log(`Example app listening on port ${port}`);
