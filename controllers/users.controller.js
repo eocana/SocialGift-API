@@ -6,9 +6,11 @@ function generateAccessToken(userId) {
   return jwt.sign({ userId }, 'clave_secreta');
 }
 
-
 async function all(req, res) {
+
+  console.log("Estoy en all controller");
   try {
+    
     const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
     if (pageSize !== null || pageSize !== undefined || pageSize !== "" || pageSize !== 0 || pageSize !== NaN) {
       const users = await db.getUsers(pageSize);
@@ -16,8 +18,9 @@ async function all(req, res) {
         const users = await db.all();
     }  
     res.json(users);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+  } catch (err) {
+        console.log("Estoy en all catch: " + err);
+        res.status(500).json({ message: err.message+" Error en el all controller"});
     }
 
 }
@@ -39,6 +42,7 @@ async function login(req, res) {
             res.status(401).json({ message: "Invalid credentials" });
             return;
         }
+      
         console.log("Mi ID de usuario es: "+user.id);
         const accessToken = generateAccessToken(user.id);
         res.json({ accessToken });

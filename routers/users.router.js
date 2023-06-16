@@ -30,7 +30,10 @@ router.get('/:id/friends/requests', authMiddleware, getUserFriendRequests);
 
 router.post("/friends/:id", authMiddleware, sendFriendRequest);
 router.put("/friends/:id", authMiddleware, actionFriendRequest);
+router.get("/friends", authMiddleware, getUserFriendRequests);
 
 
+// Ruta /users/:id/wishlists anidada en /users/:id
+//router.use('/users/:id/wishlists', wishlistsRouter);
 
 module.exports = router;

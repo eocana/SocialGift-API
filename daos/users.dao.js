@@ -9,9 +9,11 @@ function deletePassword(row) {
 }
 
 function all() {
+    console.log("Estoy en all");
     const stm = db.prepare('SELECT * FROM users');
     const rows = stm.all();
     rows.map((row) => deletePassword(row));
+    console.log("Estoy en rows ");
     return rows;
 }
 
@@ -21,7 +23,6 @@ function item(id) {
   const rows = stm.get(id);
   return deletePassword(rows);
 }
-
 
 function login(email, password) {
   const stm = db.prepare("SELECT * FROM users WHERE email = ? AND password = ?");
@@ -110,10 +111,7 @@ function rejectFriendRequest(petitionId) {
   return info;
 }
 
-
-
 module.exports = {
-
   all,
   item,
   login,
@@ -127,5 +125,4 @@ module.exports = {
   sendFriendRequest,
   acceptFriendRequest,
   rejectFriendRequest,
-
 };

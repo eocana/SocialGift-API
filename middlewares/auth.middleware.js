@@ -15,6 +15,8 @@ function authMiddleware(req, res, next) {
     req.user = {
       userId : decoded.userId
     }
+
+    console.log("Estoy en authMiddleware mi ID es: " + req.user.userId);
     
     next();
   } catch (err) {
