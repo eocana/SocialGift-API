@@ -145,16 +145,15 @@ async function searchUserGift (req, res) {
   }
 }
 
-async function searchAllGifts () {
+async function searchAllGifts (req, res) {
   try {
-    console.log ("HOLA?!");
     const all_gifts = await db.searchAllGifts ();
-    console.log ("all_gifts", all_gifts);
+    //console.log ("all_gifts", all_gifts);
   
-    res.json (all_gifts);
+    res.status(201).json (all_gifts);
   } catch (error) {
     res.status(500).json(error.message);
-  }
+  };
 }
 
 module.exports = {

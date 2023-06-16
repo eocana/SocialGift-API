@@ -18,10 +18,11 @@ router.post ("/", authMiddleware, addGift) //Afegeix un nou regal
 
 router.put ("/wishlist/:idw/gift/:idg", authMiddleware, updateGift); //actualitza la prioritat, la url i si s'ha reservat  o no
 
+router.get ("/all", authMiddleware, searchAllGifts);
 router.get ("/:idg", authMiddleware, searchGift); //busca qualsevol regal
 router.get ("/wishlist/:idw/gifts", authMiddleware, searchUserGift); //busca tots els regals pertanyents a un usuari
 router.get ("/users/:idu/gift", authMiddleware, searchUserGift);//searchUserReservedGifts); //busca els regals reservats d'un usuari
-router.get ("/all", authMiddleware, searchAllGifts);
+
 
 router.delete ("/wishlist/:idw/gift/:idg", authMiddleware, deleteGift);
 router.delete ("/:idg/reservation", authMiddleware, deleteReservationGift);

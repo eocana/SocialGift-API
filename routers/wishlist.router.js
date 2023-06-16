@@ -17,6 +17,7 @@ router.get("/users/:id/wishlist/", authMiddleware, showUserWishlists);
 router.put ('/users/:id/wishlist/:idw', authMiddleware, updateWishlist);
 router.delete("/users/:id/wishlist/:idw", authMiddleware, deleteWishlist);
 router.post("/wishlist", authMiddleware, createWishlist);
+
 router.get('/wishlists', authMiddleware, showAllWishlists);
 router.get ('/wishlist/:idw', authMiddleware, showWishlist);
 

@@ -138,7 +138,7 @@ function searchAllGifts () {
     SELECT * FROM gifts
     `);
 
-    const gifts = stm.run ();
+    const gifts = stm.all();
 
     return gifts;
 }
