@@ -1,193 +1,156 @@
-const db = require("../daos/users.dao.js");
-const jwt = require('jsonwebtoken');
+const DBSOURCE = './database.sqlite';
 
+const betterSqlite3 = require('better-sqlite3');
+const db = betterSqlite3(DBSOURCE);
 
-function generateAccessToken(userId) {
-  return jwt.sign({ userId }, 'clave_secreta');
+function deletePassword(row) {
+  delete row.password;
+  return row;
 }
 
-async function all(req, res) {
+function all() {
+    console.log("Estoy en all");
+    const stm = db.prepare('SELECT * FROM users');
+    const rows = stm.all();
+    rows.map((row) => deletePassword(row));
+    console.log("Estoy en rows ");
+    return rows;
+}
 
-  console.log("Estoy en all controller");
-  try {
-    
-    const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
-    if (pageSize !== null || pageSize !== undefined || pageSize !== "" || pageSize !== 0 || pageSize !== NaN) {
-      const users = await db.getUsers(pageSize);
-    } else {
-        const users = await db.all();
-    }  
-    res.json(users);
-  } catch (err) {
-        console.log("Estoy en all catch: " + err);
-        res.status(500).json({ message: err.message+" Error en el all controller"});
+function item(id) {
+  //console.log("Estoy en item: "+id);
+  const stm = db.prepare("SELECT * FROM users WHERE id = ?");
+  const rows = stm.get(id);
+  return deletePassword(rows);
+}
+
+function login(email, password) {
+  const stm = db.prepare("SELECT * FROM users WHERE email = ? AND password = ?");
+  const rows = stm.get(email, password);
+  return rows;
+}
+  
+function create(user) {
+  
+  const existingUser = db.prepare("SELECT * FROM users WHERE email = ?").get(user.email);
+  
+  if (existingUser) {
+    throw new Error("El correo electrónico ya está en uso.");
+  }
+
+  const stm = db.prepare(
+    "INSERT INTO users (id, name, last_name, email, password, image) VALUES (?, ?, ?, ?, ?, ?)"
+  );
+  const info = stm.run(
+    user.id,
+    user.name,
+    user.last_name,
+    user.email,
+    user.password,
+    user.image
+  );
+  return info.lastInsertRowid;
+}
+
+function edit(user) {
+  console.log("DAO: " + user.id);
+  const stm = db.prepare(
+    "UPDATE users SET name = ?, last_name = ?, email = ?, password = ?, image = ? WHERE id = ?"
+  );
+  const info = stm.run(
+    user.name,
+    user.last_name,
+    user.email,
+    user.password,
+    user.image,
+    user.id
+  );
+  console.log("INFO: ", info); // Imprimir el valor de info para depurar
+  return info.changes;
+}
+
+
+function searchUsersByEmail(email) {
+  const stm = db.prepare('SELECT * FROM users WHERE email LIKE ?');
+  const users = stm.all(`%${email}%`);
+  return users;
+}
+
+function getUsers(pageSize) {
+  const stm = db.prepare('SELECT * FROM users LIMIT ?');
+  const users = stm.all(pageSize);
+  return users;
+}
+
+function getUserFriends(userId) {
+  const stm = db.prepare('SELECT DISTINCT id_user_from, id_user_to FROM friendship WHERE (id_user_from = ? OR id_user_to = ?) AND status = ?');
+  const rows = stm.all(userId, userId, "accepted");
+  
+  // Recorrer las filas y extraer los IDs únicos de los amigos
+  const friendIds = [];
+  for (const row of rows) {
+    if (row.id_user_from !== userId) {
+      friendIds.push(row.id_user_from);
     }
-
-}
-
-async function item(req, res) {
-  try {
-    const row = await db.item(req.params.id);
-    res.json(row);
-  } catch (ex) {
-    res.status(500).json({ error: ex.message});
-  }
-}
-
-async function login(req, res) {
-    try {
-        const user = await db.login(req.body.email, req.body.password);
-
-        if (!user) {
-            res.status(401).json({ message: "Invalid credentials" });
-            return;
-        }
-        console.log("Mi ID de usuario es: "+user.id);
-        const accessToken = generateAccessToken(user.id);
-        res.json({ accessToken });
-
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+    if (row.id_user_to !== userId) {
+      friendIds.push(row.id_user_to);
     }
-}
+  }
 
-async function create(req, res) {
-    try {
-        const user = await db.create(req.body);
-        res.status(201).json(user);
-    } catch (err) {
-        res.status(500).json({ message: err.message });
+  // Obtener la información completa de los amigos utilizando los IDs obtenidos
+  const friendList = [];
+  for (const friendId of friendIds) {
+    const friend = item(friendId);
+    if (friend) {
+      friendList.push(friend);
     }
-}
-
-async function getLoggedInUser(req, res) {
- 
-  try {
-    const userId = req.user.userId;
-    const user = await db.item(userId);
-    if (!user) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
-    }
-    res.json(user);
-  } catch (err) {
-    console.log("Estoy en getLoggedInUser catch: " + err);
-    res.status(500).json({ message: "err.message" });
-  }
-}
-
-async function editUser(req, res) {
-
-  try {
-    const userId = req.user.userId;
-
-    if (userId === "@me") {
-      console.log("Estoy editando mi perfil");
-    }
-
-    const user = await db.edit(userId);
-    if (!user) {
-      return res.status(404).json({ message: "err.message" });
-    }
-  } catch (err) {
-    console.log("Estoy en editUser catch: ");
-    res.status(500).json({ message: "err.message" });
-  }
-}
-
-async function searchUsers(req, res) {
-  try {
-    const email = req.query.s;
-    const users = await db.searchUsersByEmail(email);
-    res.json(users);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
-}
-
-async function getLoggedInUserFriends(req, res) {
-
-  try {
-    const userId = req.user.userId;
-    const friends = await db.getUserFriends(userId);
-    res.json(friends);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
   }
 
+  return friendList;
 }
 
-async function getUserFriends(req, res) {
-  try {
-    const userId = req.params.id;
-    const friends = await db.getUserFriends(userId);
-    res.json(friends);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+function getUserFriendRequests(userId) {
+  const stm = db.prepare('SELECT * FROM friendship WHERE id_user_to = ? AND status = ?');
+  const friendRequests = stm.all(userId, "pending");
+  return friendRequests;
 }
 
-async function getUserFriendRequests(req, res) {
-  try {
-    const userId = req.params.id;
-    if (userId === "@me") {
-      userId = req.user.userId;
-      const friendRequests = await db.getLoggedFriends(userId);
-    } else { 
-      const friendRequests = await db.getUserFriendRequests(userId);
-      
-    }
-    res.json(friendRequests);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+function getLoggedFriends(userId) {
+  const stm = db.prepare('SELECT * FROM friendship WHERE id_user_from = ? AND status = ?');
+  const rows = stm.all(userId, "accepted");
+  return rows;
 }
 
-async function sendFriendRequest(req, res) { 
-  try {
-    const userId = req.user.userId;
-    const friendId = req.params.id;
-    const friendRequest = await db.sendFriendRequest(userId, friendId);
-    res.json(friendRequest);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
-  }
+function sendFriendRequest(userId, friendId) {
+  const stm = db.prepare('INSERT INTO friendship (id_user_from, id_user_to, status) VALUES (?, ?, ?)');
+  const info = stm.run(userId, friendId, "pending");
+  return info;
 }
 
-async function actionFriendRequest(req, res) {
-  try {
-    const petitionId = req.params.id;
-
-    const action = req.query.a.trim();
-
-    const friendRequest = null;
-
-    switch (action) {
-      case "accept": friendRequest = await db.acceptFriendRequest(petitionId);
-        break;
-      case "reject": friendRequest = await db.rejectFriendRequest(petitionId);
-        break;
-    }
-    res.json(friendRequest);
-
-  } catch (err) {
-    console.log("Estoy en actionFriendRequest catch: ");
-    res.status(500).json({ message: err.message });
-  }
+function acceptFriendRequest(petitionId) { 
+  const stm = db.prepare('UPDATE friendship SET status = ? WHERE id = ?');
+  const info = stm.run("accepted", petitionId);
+  return info;
 }
 
+function rejectFriendRequest(petitionId) { 
+  const stm = db.prepare('UPDATE friendship SET status = ? WHERE id = ?');
+  const info = stm.run("rejected", petitionId);
+  return info;
+}
 
 module.exports = {
   all,
   item,
   login,
   create,
-  getLoggedInUser,
-  editUser,
-  searchUsers,
-  getLoggedInUserFriends,
+  edit,
+  searchUsersByEmail,
+  getUsers,
   getUserFriends,
   getUserFriendRequests,
+  getLoggedFriends,
   sendFriendRequest,
-  actionFriendRequest
-    
+  acceptFriendRequest,
+  rejectFriendRequest,
 };

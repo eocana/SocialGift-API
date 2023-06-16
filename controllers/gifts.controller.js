@@ -98,7 +98,8 @@ async function reserveGift(req, res) {
     const giftId = req.params.idg;
     const userId = req.user.userId;
 
-    db.reserveGift(userId, giftId);
+    const info = db.reserveGift(userId, giftId);
+    res.status (200).json (info);
   } catch (error) {
     res.status(500).json(error.message);
   }
@@ -134,7 +135,7 @@ async function searchUserGift (req, res) {
     let user_gifts = null;
   //  console.log ("id_wishlist: " + wishlist_id);
     if (req.query.reserved) {
-  //    console.log ("TRUE");
+      console.log ("TRUE");
       user_gifts = db.searchUserReservedGifts (user_id);
     } else {
       user_gifts = db.searchUserGift (wishlist_id);//, user_id);

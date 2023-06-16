@@ -47,14 +47,13 @@ function showUserWishlists (user_id) {
     return wishlists;
 }
 
-function showWishlist (wishlist_id, user_id) {
+function showWishlist (wishlist_id) {//, user_id) {
     const stm = db.prepare (`
     SELECT * FROM wishlist
     WHERE id = ?
-    AND id_user = ?
     `);
 
-    const wishlist = stm.get (wishlist_id, user_id);
+    const wishlist = stm.get (wishlist_id);//, user_id);
 
     return wishlist;
 }

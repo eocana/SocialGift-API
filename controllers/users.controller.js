@@ -1,5 +1,6 @@
 const db = require("../daos/users.dao.js");
 const jwt = require('jsonwebtoken');
+const uuid = require("uuid");
 
 
 function generateAccessToken(userId) {
@@ -7,22 +8,22 @@ function generateAccessToken(userId) {
 }
 
 async function all(req, res) {
-
   console.log("Estoy en all controller");
   try {
-    
     const pageSize = req.query.pageSize ? parseInt(req.query.pageSize) : 10;
-    if (pageSize !== null || pageSize !== undefined || pageSize !== "" || pageSize !== 0 || pageSize !== NaN) {
-      const users = await db.getUsers(pageSize);
+    let users;
+
+    if (pageSize !== null && pageSize !== undefined && pageSize !== "" && pageSize !== 0 && !isNaN(pageSize)) {
+      users = await db.getUsers(pageSize);
     } else {
-        const users = await db.all();
-    }  
-    res.json(users);
-  } catch (err) {
-        console.log("Estoy en all catch: " + err);
-        res.status(500).json({ message: err.message+" Error en el all controller"});
+      users = await db.all();
     }
 
+    res.json(users);
+  } catch (err) {
+    console.log("Estoy en all catch: " + err);
+    res.status(500).json({ message: err.message + " Error en el all controller" });
+  }
 }
 
 async function item(req, res) {
@@ -52,8 +53,19 @@ async function login(req, res) {
 }
 
 async function create(req, res) {
-    try {
-        const user = await db.create(req.body);
+  try {
+
+    const user = {
+      id: uuid.v4(),
+      name: req.body.name,
+      last_name: req.body.last_name,
+      email: req.body.email,
+      password: req.body.password,
+      image: req.body.image,
+    };
+       
+    await db.create(user);
+    
         res.status(201).json(user);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -71,32 +83,55 @@ async function getLoggedInUser(req, res) {
     res.json(user);
   } catch (err) {
     console.log("Estoy en getLoggedInUser catch: " + err);
-    res.status(500).json({ message: "err.message" });
+    res.status(500).json({ message: err.message });
   }
 }
 
 async function editUser(req, res) {
 
   try {
-    const userId = req.user.userId;
 
-    if (userId === "@me") {
-      console.log("Estoy editando mi perfil");
+    let userId = req.params.id;
+    
+
+    if (userId === "@me" || userId === "profile") {
+      
+      userId = req.user.userId;
+    
+      console.log("Estoy editando mi perfil"); 
+    } 
+
+    console.log("editUser ID: "+userId);
+    
+    const user = {
+      id: userId,
+      name: req.body.name,
+      last_name: req.body.last_name,
+      email: req.body.email,
+      password: req.body.password,
+      image: req.body.image,
+    };
+    
+    const info = await db.edit(user);
+    
+
+    if (!info) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    const user = await db.edit(userId);
-    if (!user) {
-      return res.status(404).json({ message: "err.message" });
-    }
+
+    return res.status(202).json("Updated");
+  
   } catch (err) {
-    console.log("Estoy en editUser catch: ");
-    res.status(500).json({ message: "err.message" });
+    console.log("Estoy en editUser catch: "+err);
+    res.status(500).json({ message: err.message });
   }
 }
 
 async function searchUsers(req, res) {
   try {
     const email = req.query.s;
+    console.log(email);
     const users = await db.searchUsersByEmail(email);
     res.json(users);
   } catch (err) {
@@ -128,14 +163,18 @@ async function getUserFriends(req, res) {
 
 async function getUserFriendRequests(req, res) {
   try {
-    const userId = req.params.id;
+    const userId = req.params.id;;
+    let friendRequests;
+    console.log("HOLALA: "+req.params.id);
     if (userId === "@me") {
-      userId = req.user.userId;
-      const friendRequests = await db.getLoggedFriends(userId);
-    } else { 
-      const friendRequests = await db.getUserFriendRequests(userId);
-      
+      const id = req.user.userId;
+      console.log("Mi id: " + id);
+      friendRequests = await db.getUserFriendRequests(id);
+    } else {
+
+      friendRequests = await db.getUserFriendRequests(userId);
     }
+
     res.json(friendRequests);
   } catch (err) {
     res.status(500).json({ message: err.message });
@@ -157,15 +196,19 @@ async function actionFriendRequest(req, res) {
   try {
     const petitionId = req.params.id;
 
-    const action = req.query.a.trim();
-
-    const friendRequest = null;
+    const action = req.query.a;
+    console.log("Action: "+action);
+    let friendRequest;
 
     switch (action) {
       case "accept": friendRequest = await db.acceptFriendRequest(petitionId);
         break;
       case "reject": friendRequest = await db.rejectFriendRequest(petitionId);
         break;
+      default:
+        console.log("ERROR");
+        break;
+
     }
     res.json(friendRequest);
 

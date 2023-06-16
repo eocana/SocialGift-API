@@ -93,7 +93,9 @@ function reserveGift(userId, giftId) {//, wishlist_id) {
         WHERE id = ?`
     );
 
-    stm.run (userId, giftId);
+    const info = stm.run (userId, giftId);
+
+    return info;
 }
 
 function deleteReservationGift (id) {

@@ -21,7 +21,7 @@ router.put ("/wishlist/:idw/gift/:idg", authMiddleware, updateGift); //actualitz
 router.get ("/all", authMiddleware, searchAllGifts);
 router.get ("/:idg", authMiddleware, searchGift); //busca qualsevol regal
 router.get ("/wishlist/:idw/gifts", authMiddleware, searchUserGift); //busca tots els regals pertanyents a un usuari
-router.get ("/users/:idu/gift", authMiddleware, searchUserGift);//searchUserReservedGifts); //busca els regals reservats d'un usuari
+router.get ("/users/:idu/gift", authMiddleware, searchUserGift); //busca els regals reservats d'un usuari fent servir ?reserved=true en la URL
 
 
 router.delete ("/wishlist/:idw/gift/:idg", authMiddleware, deleteGift);

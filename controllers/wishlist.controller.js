@@ -67,9 +67,9 @@ async function showUserWishlists (req, res) {
 
 async function showWishlist (req, res) {
     try {
-        const user_id = req.user.userId;
+    //    const user_id = req.user.userId;
         const wishlist_id = req.params.idw;
-        const wishlist = await db.showWishlist (wishlist_id, user_id);
+        const wishlist = await db.showWishlist (wishlist_id)//, user_id);
 
         res.json (wishlist);
     } catch (error) {
@@ -82,12 +82,11 @@ async function deleteWishlist (req, res) {
         const user_id = req.params.id;
         const wishlist_id = req.params.idw;
         const myuser_id = req.user.userId;
-        console.log("usuario por parametro: " + user_id + " | mi usuario: " + myuser_id);
+//        console.log("usuario por parametro: " + user_id + " | mi usuario: " + myuser_id);
         if (user_id === myuser_id) { 
             const deleted_wishlist = db.deleteWishlist(wishlist_id);
-            res.sendStatus (200).json ({message: "Wishlist with id: " + wishlist_id + " succesfully deleted"});
         }
-        
+        res.sendStatus (200);//.json ({message: "Wishlist with id: " + wishlist_id + " succesfully deleted"});
     } catch (err) {
         res.status (500).json({ message: err.message });
     }
