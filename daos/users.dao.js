@@ -121,9 +121,9 @@ function getLoggedFriends(userId) {
   return rows;
 }
 
-function sendFriendRequest(userId, friendId) {
-  const stm = db.prepare('INSERT INTO friendship (id_user_from, id_user_to, status) VALUES (?, ?, ?)');
-  const info = stm.run(userId, friendId, "pending");
+function sendFriendRequest(userId, friendId, date) {
+  const stm = db.prepare('INSERT INTO friendship (id_user_from, id_user_to, status, created_at) VALUES (?, ?, ?, ?)');
+  const info = stm.run(userId, friendId, "pending", date);
   return info;
 }
 

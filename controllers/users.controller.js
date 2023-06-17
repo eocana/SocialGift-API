@@ -7,6 +7,16 @@ function generateAccessToken(userId) {
   return jwt.sign({ userId }, 'clave_secreta');
 }
 
+function dataActual() {
+    var today = new Date();
+    var dd = String(today.getDate()).padStart(2, '0');
+    var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+    var yyyy = today.getFullYear();
+    
+    today = dd + '/' + mm + '/' + yyyy;
+    return today;
+}
+
 async function all(req, res) {
   console.log("Estoy en all controller");
   try {
@@ -185,7 +195,7 @@ async function sendFriendRequest(req, res) {
   try {
     const userId = req.user.userId;
     const friendId = req.params.id;
-    const friendRequest = await db.sendFriendRequest(userId, friendId);
+    const friendRequest = await db.sendFriendRequest(userId, friendId, dataActual());
     res.json(friendRequest);
   } catch (err) {
     res.status(500).json({ message: err.message });
